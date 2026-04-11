@@ -6,6 +6,7 @@
 #include "cube_config.h"
 #include "serial_cli.h"
 #include "stream_3d8.h"
+#include "watchdog.h"
 
 namespace {
 
@@ -307,15 +308,22 @@ void espAtBridgeHandle() {
   if (!bridgeEnabled) {
     return;
   }
+  uint16_t processed = 0;
   while (espUart.available() > 0) {
     uint8_t b = (uint8_t)espUart.read();
     if (feedBinaryByte(b)) {
+      if (((++processed) & 0x1Fu) == 0u) {
+        watchdogKick();
+      }
       continue;
     }
     // Only feed clean ASCII control bytes to CLI fallback.
     // This prevents binary payload bytes from overflowing the text command line buffer.
     if (isCliByte(b)) {
       serialCliProcessChar((char)b, espUart, false);
+    }
+    if (((++processed) & 0x1Fu) == 0u) {
+      watchdogKick();
     }
   }
 }

@@ -14,6 +14,7 @@
 #include "esp_at_bridge.h"
 #include "sd_storage.h"
 #include "stream_3d8.h"
+#include "watchdog.h"
 
 static RenderMode renderMode = MODE_WAVE;
 static uint16_t animStepMs = 33;
@@ -206,6 +207,10 @@ static void printStatus() {
   cliOut->print(waveGetSwapRG() ? F("ON") : F("OFF"));
   cliOut->print(F(" | espUart="));
   cliOut->print(espAtBridgeIsEnabled() ? F("ON") : F("OFF"));
+  cliOut->print(F(" | wd="));
+  cliOut->print(watchdogIsEnabled() ? F("ON") : F("OFF"));
+  cliOut->print(F(" rst="));
+  cliOut->print(watchdogGetResetCause());
   cliOut->print(F(" | sd="));
   cliOut->print(sdStorageIsReady() ? F("ON") : F("OFF"));
   cliOut->print(F(" | sdAnim="));

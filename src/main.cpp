@@ -13,6 +13,7 @@
 #include "serial_cli.h"
 #include "sd_storage.h"
 #include "stream_3d8.h"
+#include "watchdog.h"
 #include "animations/wave_anim.h"
 
 static uint32_t lastFrameMs = 0;
@@ -119,9 +120,15 @@ static void handleIrCommandsStub(RenderMode mode) {
 }
 
 void setup() {
+  watchdogCaptureResetCause();
   Serial.begin(115200);
+  watchdogInit(2000);
+  watchdogKick();
+  Serial.print(F("[RST] cause="));
+  Serial.println(watchdogGetResetCause());
 
   refreshInitPins();
+  watchdogKick();
   waveInit();
   rainInit();
   helloInit();
@@ -130,12 +137,14 @@ void setup() {
   rawTestInit();
   initFrameBuffers();
   refreshStart(CubeConfig::FRAME_HZ);
+  watchdogKick();
 
   serialCliInit();
   irReceiverInit();
   espAtBridgeInit();
   stream3d8Init();
   sdStorageInit();
+  watchdogKick();
   if (sdStorageHasAnimations()) {
     serialCliSetRenderMode(MODE_SD_ANIM);
     Serial.println(F("[SD] default mode set to SD animations"));
@@ -144,6 +153,7 @@ void setup() {
 }
 
 void loop() {
+  watchdogKick();
   serialCliHandle();
   espAtBridgeHandle();
 
@@ -218,4 +228,6 @@ void loop() {
 
     commitBackToFront();
   }
+
+  watchdogKick();
 }
